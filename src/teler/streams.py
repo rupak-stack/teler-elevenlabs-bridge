@@ -2,8 +2,9 @@ import asyncio
 from enum import Enum
 from typing import Callable, Tuple
 
-import exceptions
 import websockets
+
+from teler import exceptions
 
 
 class StreamType(Enum):
