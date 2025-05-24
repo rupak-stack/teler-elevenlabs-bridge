@@ -1,6 +1,6 @@
 import asyncio
 from enum import Enum
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Any
 
 import websockets
 
@@ -14,10 +14,7 @@ class StreamType(Enum):
 
 class StreamOp(Enum):
     RELAY = 0
-    INTERRUPT = 1
-    CLEAR = 2
-    STOP = 3
-    PASS = 4
+    PASS = 1
 
 
 class StreamConnector:
@@ -27,7 +24,7 @@ class StreamConnector:
     Opens a Websocket connection with `remote_url` and delegates message processing to the caller.
     """
 
-    def _default_stream_handler(self, message: str) -> Tuple[str, StreamOp]:
+    def _default_stream_handler(self, message: str) -> Tuple[Any, StreamOp]:
         return (message, StreamOp.RELAY)
 
     def __init__(
@@ -50,21 +47,6 @@ class StreamConnector:
         self.call_stream_handler = call_stream_handler
         self.remote_stream_handler = remote_stream_handler
 
-    async def _process_stream_op(self, stream_op: StreamOp, data, send_ws):
-        if stream_op == StreamOp.RELAY:
-            await send_ws.send(data)
-        elif stream_op == StreamOp.INTERRUPT:
-            message = {"event": "interrupt", "data": {"chunk_id": data}}
-            await send_ws.send(message)
-        elif stream_op == StreamOp.CLEAR:
-            message = {"event": "clear"}
-            await send_ws.send(message)
-        elif stream_op == StreamOp.STOP:
-            message = {"event": "stop"}
-            await send_ws.send(message)
-        elif stream_op == StreamOp.PASS:
-            pass
-
     async def bridge_stream(self, call_ws) -> None:
         async with websockets.connect(self.remote_url) as remote_ws:
 
@@ -73,18 +55,22 @@ class StreamConnector:
                     res = await self.call_stream_handler(message)
                     if not isinstance(res, tuple):
                         raise exceptions.InvalidStreamOperation(
-                            msg="Stream handler response must be a tuple of (str, StreamOp)"
+                            msg="Stream handler response must be a tuple of (Any, StreamOp)"
                         )
-                    await self._process_stream_op(res[1], res[0], remote_ws)
+                    data, stream_op = res
+                    if stream_op == StreamOp.RELAY:
+                        await remote_ws.send(data)
 
             async def remote_stream() -> None:
                 async for message in remote_ws:
                     res = await self.remote_stream_handler(message)
                     if not isinstance(res, tuple):
                         raise exceptions.InvalidStreamOperation(
-                            msg="Stream handler response must be a tuple of (str, StreamOp)"
+                            msg="Stream handler response must be a tuple of (Any, StreamOp)"
                         )
-                    await self._process_stream_op(res[1], res[0], call_ws)
+                    data, stream_op = res
+                    if stream_op == StreamOp.RELAY:
+                        await call_ws.send(data)
 
         done, pending = await asyncio.wait(
             [asyncio.create_task(call_stream()), asyncio.create_task(remote_stream())],
