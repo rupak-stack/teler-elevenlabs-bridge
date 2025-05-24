@@ -79,10 +79,13 @@ class StreamConnector:
                     if stream_op == StreamOp.RELAY:
                         await call_ws.send(data)
 
-        done, pending = await asyncio.wait(
-            [asyncio.create_task(call_stream()), asyncio.create_task(remote_stream())],
-            return_when=asyncio.FIRST_COMPLETED,
-        )
-        for task in pending:
-            task.cancel()
-        logger.info("Connection torn down")
+            done, pending = await asyncio.wait(
+                [
+                    asyncio.create_task(call_stream()),
+                    asyncio.create_task(remote_stream()),
+                ],
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            for task in pending:
+                task.cancel()
+            logger.info("Connection torn down")
