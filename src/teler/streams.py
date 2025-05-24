@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from enum import Enum
-from typing import Any, Callable, Tuple
+from typing import Awaitable, Callable, Tuple
 
 import websockets
 
@@ -20,30 +20,34 @@ class StreamOp(Enum):
     PASS = 1
 
 
+StreamHandler = Callable[[str], Awaitable[Tuple[str, StreamOp]]]
+
+
 class StreamConnector:
     """
     Media Stream Connector Interface.
 
-    Opens a Websocket connection with `remote_url` and delegates message processing to the caller.
+    Bridges the call and remote websocket streams via pluggable handlers.
     """
 
-    def _default_stream_handler(self, message: str) -> Tuple[Any, StreamOp]:
+    @staticmethod
+    async def _default_stream_handler(message: str) -> Tuple[str, StreamOp]:
         return (message, StreamOp.RELAY)
 
     def __init__(
         self,
         stream_type: StreamType = StreamType.BIDIRECTIONAL,
         remote_url: str = "",
-        call_stream_handler: Callable = _default_stream_handler,
-        remote_stream_handler: Callable = _default_stream_handler,
+        call_stream_handler: StreamHandler = _default_stream_handler,
+        remote_stream_handler: StreamHandler = _default_stream_handler,
     ):
         if stream_type == StreamType.UNIDIRECTIONAL:
             raise exceptions.NotImplemented(
                 msg="Unidirectional streams are not supported yet."
             )
         if not remote_url:
-            raise exceptions.InvalidParameters(
-                msg="remote_url is a required parameter."
+            raise exceptions.BadParameters(
+                param="remote_url", msg="remote_url is a required parameter."
             )
         self.stream_type = stream_type
         self.remote_url = remote_url
@@ -60,8 +64,9 @@ class StreamConnector:
                     logger.info(f"Received message on call stream: {message}")
                     res = await self.call_stream_handler(message)
                     if not isinstance(res, tuple):
-                        raise exceptions.InvalidStreamOperation(
-                            msg="Stream handler response must be a tuple of (Any, StreamOp)"
+                        raise exceptions.BadParameters(
+                            param="Stream handler response",
+                            msg="Stream handler response must be a tuple of (str, StreamOp)",
                         )
                     data, stream_op = res
                     if stream_op == StreamOp.RELAY:
@@ -72,8 +77,9 @@ class StreamConnector:
                     logger.info(f"Received message on remote stream: {message}")
                     res = await self.remote_stream_handler(message)
                     if not isinstance(res, tuple):
-                        raise exceptions.InvalidStreamOperation(
-                            msg="Stream handler response must be a tuple of (Any, StreamOp)"
+                        raise exceptions.BadParameters(
+                            param="Stream handler response",
+                            msg="Stream handler response must be a tuple of (str, StreamOp)",
                         )
                     data, stream_op = res
                     if stream_op == StreamOp.RELAY:
@@ -88,4 +94,5 @@ class StreamConnector:
             )
             for task in pending:
                 task.cancel()
-            logger.info("Connection torn down")
+
+            logger.info("Bridge completed")

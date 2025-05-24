@@ -1,25 +1,23 @@
-GENERIC_EXCEPTION_MESSAGE = "Generic Exception"
-GENERIC_EXCEPTION_CODE = 500
-
-
 class TelerException(Exception):
-    def __init__(
-        self, msg: str = GENERIC_EXCEPTION_MESSAGE, code: int = GENERIC_EXCEPTION_CODE
-    ):
-        self.msg = msg
-        self.code = code
+    message = "An exception occurred."
+    code = 500
+
+    def __init__(self, msg: str = message):
+        super().__init__(msg)
 
 
-class InvalidParameters(TelerException):
-    msg = "Invalid Parameters"
+class BadParameters(TelerException):
+    message = "Bad Parameter"
     code = 400
+
+    def __init__(self, param: str = "", msg: str = message):
+        self.param = param
+        super().__init__(msg)
 
 
 class NotImplemented(TelerException):
-    msg = "Not implemented"
+    message = "Not implemented"
     code = 501
 
-
-class InvalidStreamOperation(TelerException):
-    msg = "Invalid Stream Operation"
-    code = 400
+    def __init__(self, msg: str = message):
+        super().__init__(msg)
