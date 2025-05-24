@@ -51,7 +51,7 @@ class StreamConnector:
         async with websockets.connect(self.remote_url) as remote_ws:
 
             async def call_stream() -> None:
-                async for message in call_ws.iter_bytes():
+                async for message in call_ws.iter_text():
                     res = await self.call_stream_handler(message)
                     if not isinstance(res, tuple):
                         raise exceptions.InvalidStreamOperation(
