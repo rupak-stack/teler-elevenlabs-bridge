@@ -65,7 +65,7 @@ class StreamConnector:
                         )
                     data, stream_op = res
                     if stream_op == StreamOp.RELAY:
-                        await remote_ws.send_text(data)
+                        await remote_ws.send(data)
 
             async def remote_stream() -> None:
                 async for message in remote_ws:
