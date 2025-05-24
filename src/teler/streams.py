@@ -1,10 +1,13 @@
 import asyncio
+import logging
 from enum import Enum
-from typing import Callable, Tuple, Any
+from typing import Any, Callable, Tuple
 
 import websockets
 
 from teler import exceptions
+
+logger = logging.getLogger(__name__)
 
 
 class StreamType(Enum):
@@ -50,8 +53,11 @@ class StreamConnector:
     async def bridge_stream(self, call_ws) -> None:
         async with websockets.connect(self.remote_url) as remote_ws:
 
+            logger.info("Connected to remote websocket")
+
             async def call_stream() -> None:
                 async for message in call_ws.iter_text():
+                    logger.info(f"Received message on call stream: {message}")
                     res = await self.call_stream_handler(message)
                     if not isinstance(res, tuple):
                         raise exceptions.InvalidStreamOperation(
@@ -63,6 +69,7 @@ class StreamConnector:
 
             async def remote_stream() -> None:
                 async for message in remote_ws:
+                    logger.info(f"Received message on remote stream: {message}")
                     res = await self.remote_stream_handler(message)
                     if not isinstance(res, tuple):
                         raise exceptions.InvalidStreamOperation(
@@ -78,3 +85,4 @@ class StreamConnector:
         )
         for task in pending:
             task.cancel()
+        logger.info("Connection torn down")
