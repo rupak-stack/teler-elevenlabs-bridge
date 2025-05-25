@@ -76,6 +76,7 @@ class StreamConnector:
                     if stream_op == StreamOp.RELAY:
                         await remote_ws.send(data)
                     elif stream_op == StreamOp.STOP:
+                        logger.info(f"StreamConnector: closing call stream")
                         await call_ws.close(
                             code=1000, reason="Stream stopped by client"
                         )
@@ -96,6 +97,7 @@ class StreamConnector:
                     if stream_op == StreamOp.RELAY:
                         await call_ws.send_text(data)
                     elif stream_op == StreamOp.STOP:
+                        logger.info(f"StreamConnector: closing call stream")
                         await call_ws.close(
                             code=1000, reason="Stream stopped by client"
                         )
@@ -113,4 +115,4 @@ class StreamConnector:
                 with contextlib.suppress(asyncio.CancelledError):
                     await t
 
-            logger.info("Bridge completed")
+            logger.info("StreamConnector: closing remote stream")
