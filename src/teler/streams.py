@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import logging
 from enum import Enum
 from typing import Awaitable, Callable, Tuple
@@ -18,6 +19,7 @@ class StreamType(Enum):
 class StreamOp(Enum):
     RELAY = 0
     PASS = 1
+    STOP = 2
 
 
 StreamHandler = Callable[[str], Awaitable[Tuple[str, StreamOp]]]
@@ -27,7 +29,7 @@ class StreamConnector:
     """
     Media Stream Connector Interface.
 
-    Bridges the call and remote websocket streams via pluggable handlers.
+    Bridges the call stream to a remote websocket via pluggable handlers.
     """
 
     @staticmethod
@@ -57,11 +59,13 @@ class StreamConnector:
     async def bridge_stream(self, call_ws) -> None:
         async with websockets.connect(self.remote_url) as remote_ws:
 
-            logger.info("Connected to remote websocket")
+            logger.info(f"StreamConnector: connected to {self.remote_url}")
 
             async def call_stream() -> None:
                 async for message in call_ws.iter_text():
-                    logger.info(f"Received message on call stream: {message}")
+                    logger.info(
+                        f"StreamConnector: received message on call stream: {message}"
+                    )
                     res = await self.call_stream_handler(message)
                     if not isinstance(res, tuple):
                         raise exceptions.BadParameters(
@@ -71,10 +75,17 @@ class StreamConnector:
                     data, stream_op = res
                     if stream_op == StreamOp.RELAY:
                         await remote_ws.send(data)
+                    elif stream_op == StreamOp.STOP:
+                        await call_ws.close(
+                            code=1000, reason="Stream stopped by client"
+                        )
+                        break
 
             async def remote_stream() -> None:
                 async for message in remote_ws:
-                    logger.info(f"Received message on remote stream: {message}")
+                    logger.info(
+                        f"StreamConnector: received message on remote stream: {message}"
+                    )
                     res = await self.remote_stream_handler(message)
                     if not isinstance(res, tuple):
                         raise exceptions.BadParameters(
@@ -84,6 +95,11 @@ class StreamConnector:
                     data, stream_op = res
                     if stream_op == StreamOp.RELAY:
                         await call_ws.send_text(data)
+                    elif stream_op == StreamOp.STOP:
+                        await call_ws.close(
+                            code=1000, reason="Stream stopped by client"
+                        )
+                        break
 
             done, pending = await asyncio.wait(
                 [
@@ -92,7 +108,9 @@ class StreamConnector:
                 ],
                 return_when=asyncio.FIRST_COMPLETED,
             )
-            for task in pending:
-                task.cancel()
+            for t in pending:
+                t.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await t
 
             logger.info("Bridge completed")
