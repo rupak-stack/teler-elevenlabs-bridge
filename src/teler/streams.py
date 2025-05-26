@@ -63,7 +63,7 @@ class StreamConnector:
 
             async def call_stream() -> None:
                 async for message in call_ws.iter_text():
-                    logger.info(
+                    logger.debug(
                         f"StreamConnector: received message on call stream: {message}"
                     )
                     res = await self.call_stream_handler(message)
@@ -76,7 +76,9 @@ class StreamConnector:
                     if stream_op == StreamOp.RELAY:
                         await remote_ws.send(data)
                     elif stream_op == StreamOp.STOP:
-                        logger.info(f"StreamConnector: closing call stream")
+                        logger.info(
+                            f"StreamConnector: Received STOP, closing call stream..."
+                        )
                         await call_ws.close(
                             code=1000, reason="Stream stopped by client"
                         )
@@ -84,7 +86,7 @@ class StreamConnector:
 
             async def remote_stream() -> None:
                 async for message in remote_ws:
-                    logger.info(
+                    logger.debug(
                         f"StreamConnector: received message on remote stream: {message}"
                     )
                     res = await self.remote_stream_handler(message)
@@ -97,7 +99,9 @@ class StreamConnector:
                     if stream_op == StreamOp.RELAY:
                         await call_ws.send_text(data)
                     elif stream_op == StreamOp.STOP:
-                        logger.info(f"StreamConnector: closing call stream")
+                        logger.info(
+                            f"StreamConnector: Received STOP, closing call stream..."
+                        )
                         await call_ws.close(
                             code=1000, reason="Stream stopped by client"
                         )
