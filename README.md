@@ -32,6 +32,7 @@ A `StreamHandler` coroutine receives the incoming messages on the websocket, pro
 
 The following setup bridges the call audio stream to a dummy endpoint that echoes back all incoming messages. As a result, the caller will hear their own voice played back in real time, effectively creating an audio loopback.
 
+
 ```python
 import json
 import logging
@@ -65,7 +66,7 @@ async def remote_stream_handler(message: str):
     if msg["type"] == "audio":
         payload = json.dumps(
             {
-	            "type": "audio",
+                "type": "audio",
                 "audio_b64": msg["audio_b64"],
                 "chunk_id": msg["chunk_id"],
             }
