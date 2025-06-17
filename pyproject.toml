@@ -10,3 +10,7 @@ readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name="FreJun", email="hello@frejun.com" }]
 dependencies = ["websockets>=10.0"]
+keywords = ["frejun", "teler", "sdk", "voip", "streaming"]
+
+[project.urls]
+Homepage = "https://github.com/frejun-tech/teler-py"
