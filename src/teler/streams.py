@@ -26,8 +26,7 @@ StreamHandler = Callable[[str], Awaitable[Tuple[str, StreamOp]]]
 
 
 class StreamConnector:
-    """
-    Media Stream Connector Interface.
+    """Media Stream Connector Interface.
 
     Bridges the call stream to a remote websocket via pluggable handlers.
     """
@@ -48,7 +47,7 @@ class StreamConnector:
                 msg="Unidirectional streams are not supported yet."
             )
         if not remote_url:
-            raise exceptions.BadParameters(
+            raise exceptions.BadParametersException(
                 param="remote_url", msg="remote_url is a required parameter."
             )
         self.stream_type = stream_type
@@ -59,16 +58,16 @@ class StreamConnector:
     async def bridge_stream(self, call_ws) -> None:
         async with websockets.connect(self.remote_url) as remote_ws:
 
-            logger.info(f"StreamConnector: connected to {self.remote_url}")
+            logger.info(f"[StreamConnector]: connected to {self.remote_url}")
 
             async def call_stream() -> None:
                 async for message in call_ws.iter_text():
                     logger.debug(
-                        f"StreamConnector: received message on call stream: {message}"
+                        f"[StreamConnector]: received message on call stream: {message}"
                     )
                     res = await self.call_stream_handler(message)
                     if not isinstance(res, tuple):
-                        raise exceptions.BadParameters(
+                        raise exceptions.BadParametersException(
                             param="Stream handler response",
                             msg="Stream handler response must be a tuple of (str, StreamOp)",
                         )
@@ -77,7 +76,7 @@ class StreamConnector:
                         await remote_ws.send(data)
                     elif stream_op == StreamOp.STOP:
                         logger.info(
-                            f"StreamConnector: Received STOP, closing call stream..."
+                            f"[StreamConnector]: Received STOP, closing call stream..."
                         )
                         await call_ws.close(
                             code=1000, reason="Stream stopped by client"
@@ -87,11 +86,11 @@ class StreamConnector:
             async def remote_stream() -> None:
                 async for message in remote_ws:
                     logger.debug(
-                        f"StreamConnector: received message on remote stream: {message}"
+                        f"[StreamConnector]: received message on remote stream: {message}"
                     )
                     res = await self.remote_stream_handler(message)
                     if not isinstance(res, tuple):
-                        raise exceptions.BadParameters(
+                        raise exceptions.BadParametersException(
                             param="Stream handler response",
                             msg="Stream handler response must be a tuple of (str, StreamOp)",
                         )
@@ -100,7 +99,7 @@ class StreamConnector:
                         await call_ws.send_text(data)
                     elif stream_op == StreamOp.STOP:
                         logger.info(
-                            f"StreamConnector: Received STOP, closing call stream..."
+                            f"[StreamConnector]: Received STOP, closing call stream..."
                         )
                         await call_ws.close(
                             code=1000, reason="Stream stopped by client"
@@ -119,4 +118,4 @@ class StreamConnector:
                 with contextlib.suppress(asyncio.CancelledError):
                     await t
 
-            logger.info("StreamConnector: closing remote stream")
+            logger.info("[StreamConnector]: bridge closed")

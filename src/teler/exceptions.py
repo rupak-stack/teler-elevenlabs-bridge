@@ -6,8 +6,18 @@ class TelerException(Exception):
         super().__init__(msg)
 
 
-class BadParameters(TelerException):
-    message = "Bad Parameter"
+class UnauthorizedException(Exception):
+    message = "Unauthorized"
+    code = 401
+
+
+class ForbiddenException(Exception):
+    message = "Forbidden"
+    code = 403
+
+
+class BadParametersException(TelerException):
+    message = "Bad Parameter(s)"
     code = 400
 
     def __init__(self, param: str = "", msg: str = message):
@@ -15,7 +25,7 @@ class BadParameters(TelerException):
         super().__init__(msg)
 
 
-class NotImplemented(TelerException):
+class NotImplementedException(TelerException):
     message = "Not implemented"
     code = 501
 
