@@ -3,7 +3,7 @@ from typing import Any, Awaitable, Dict
 from uuid import UUID
 
 from ..clients import BaseClient
-from .base import BaseResource, BaseResourceManager
+from .base import BaseResource, BaseResourceManager, AsyncBaseResourceManager
 
 PATHS: Dict[str, str] = {
     "create": "/calls",
@@ -46,7 +46,7 @@ class CallResourceManager(BaseResourceManager):
         return self.resource(res.json().data)
 
 
-class AsyncCallResourceManager(BaseResourceManager):
+class AsyncCallResourceManager(AsyncBaseResourceManager):
 
     def __init__(self, client: BaseClient):
         super().__init__(client, CallResource, PATHS)
