@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
-from typing import Dict, Awaitable, List
+from typing import Dict, Awaitable, List, Any
 
 import exceptions
 
@@ -10,7 +10,7 @@ from ..clients import BaseClient
 @dataclass
 class BaseResource(ABC):
 
-    def __init__(self, data):
+    def __init__(self, data: Dict[str, Any]):
         # Match only declared fields; raise on extra keys
         names = {f.name for f in fields(self)}
         unknown = set(data) - names
@@ -37,15 +37,15 @@ class BaseResourceManager(ABC):
 
     def list(self) -> List[BaseResource]:
         res = self.client.get("/calls")
-        return self.resource(res.json().data)
+        return self.resource(res.json())
 
     def retrieve(self, id) -> BaseResource:
         res = self.client.delete(self.paths["retrieve"].format(id))
-        return self.resource(res.json().data)
+        return self.resource(res.json())
 
     def update(self, id) -> BaseResource:
         res = self.client.delete(self.paths["update"].format(id))
-        return self.resource(res.json().data)
+        return self.resource(res.json())
 
     def delete(self, id) -> None:
         _ = self.client.delete(self.paths["delete"].format(id))
@@ -69,15 +69,15 @@ class AsyncBaseResourceManager(ABC):
 
     async def list(self) -> Awaitable[List[BaseResource]]:
         res = await self.client.get(self.paths["list"])
-        return self.resource(res.json().data)
+        return self.resource(res.json())
 
     async def retrieve(self, id) -> Awaitable[BaseResource]:
         res = await self.client.get(self.paths["retrieve"].format(id))
-        return self.resource(res.json().data)
+        return self.resource(res.json())
 
     async def update(self, id) -> Awaitable[BaseResource]:
         res = await self.client.patch(self.paths["update"].format(id))
-        return self.resource(res.json().data)
+        return self.resource(res.json())
 
     async def delete(self, id) -> None:
         _ = await self.client.delete(self.paths["delete"].format(id))

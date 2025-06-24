@@ -43,7 +43,7 @@ class CallResourceManager(BaseResourceManager):
             "record": record,
         }
         res = self.client.post("/calls/create", data=data)
-        return self.resource(res.json().data)
+        return self.resource(res.json())
 
 
 class AsyncCallResourceManager(AsyncBaseResourceManager):
@@ -67,4 +67,4 @@ class AsyncCallResourceManager(AsyncBaseResourceManager):
             "record": record,
         }
         res = await self.client.post("/calls/create", data=data)
-        return self.resource(res.json().data)
+        return self.resource(res.json())
