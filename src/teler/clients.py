@@ -1,7 +1,7 @@
 import logging
 import platform
 from importlib import metadata
-from typing import Dict, Optional, Union
+from typing import Awaitable, Dict, Optional, Union
 
 import constants
 import exceptions
@@ -9,8 +9,8 @@ import httpx
 
 from teler.resources.calls import (
     AsyncCallResourceManager,
-    CallResourceManager,
     BaseResourceManager,
+    CallResourceManager,
 )
 
 try:
@@ -35,8 +35,9 @@ class BaseClient:
 
     def __init__(
         self,
-        client: Union[httpx.Client, httpx.AsyncClient],
-        headers: Optional[Dict[str, str]] = None,
+        client: httpx.BaseClient,
+        headers: Union[Optional[Dict[str, str]], None] = None,
+        transport: Union[httpx.BaseTransport, None] = None,
         api_key: str = None,
         calls: BaseResourceManager = None,
         **kwargs,
@@ -46,7 +47,8 @@ class BaseClient:
                 param="api_key", msg="api_key is a required param"
             )
         self.api_key = api_key
-        self.client = client(
+        self._client = client(
+            transport=transport,
             base_url=constants.TELER_BASE_URL,
             headers={
                 k.lower(): v
@@ -60,44 +62,26 @@ class BaseClient:
 class Client(BaseClient):
     """Synchronous API Client."""
 
-    def __init__(self, api_key: str = ""):
+    def __init__(self, api_key: str = None):
         super().__init__(
             client=httpx.Client,
             api_key=api_key,
             calls=CallResourceManager,
         )
 
-    def get(self, *args, **kwargs):
-        return self.client.get(*args, **kwargs)
-
-    def post(self, *args, **kwargs):
-        return self.client.post(*args, **kwargs)
-
-    def patch(self, *args, **kwargs):
-        return self.client.patch(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        return self.client.delete(*args, **kwargs)
+    def request(self, *args, **kwargs) -> httpx.Response:
+        return self._client.request(*args, **kwargs)
 
 
 class AsyncClient(BaseClient):
     """Asynchronous API Client."""
 
-    def __init__(self, api_key: str = ""):
+    def __init__(self, api_key: str = None):
         super().__init__(
             client=httpx.AsyncClient,
             api_key=api_key,
             calls=AsyncCallResourceManager,
         )
 
-    async def get(self, *args, **kwargs):
-        return await self.client.get(*args, **kwargs)
-
-    async def post(self, *args, **kwargs):
-        return await self.client.post(*args, **kwargs)
-
-    async def patch(self, *args, **kwargs):
-        return await self.client.patch(*args, **kwargs)
-
-    async def delete(self, *args, **kwargs):
-        return await self.client.delete(*args, **kwargs)
+    async def request(self, *args, **kwargs) -> Awaitable[httpx.Response]:
+        return await self._client.request(*args, **kwargs)

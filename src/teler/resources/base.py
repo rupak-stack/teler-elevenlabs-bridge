@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
-from typing import Dict, Awaitable, List, Any
+from typing import Any, Awaitable, Dict, List
 
 import exceptions
 
@@ -36,19 +36,19 @@ class BaseResourceManager(ABC):
         )
 
     def list(self) -> List[BaseResource]:
-        res = self.client.get("/calls")
+        res = self.client.request("GET", "/calls")
         return self.resource(res.json())
 
     def retrieve(self, id) -> BaseResource:
-        res = self.client.delete(self.paths["retrieve"].format(id))
+        res = self.client.request("GET", self.paths["retrieve"].format(id))
         return self.resource(res.json())
 
     def update(self, id) -> BaseResource:
-        res = self.client.delete(self.paths["update"].format(id))
+        res = self.client.request("PATCH", self.paths["update"].format(id))
         return self.resource(res.json())
 
     def delete(self, id) -> None:
-        _ = self.client.delete(self.paths["delete"].format(id))
+        _ = self.client.request("DELETE", self.paths["delete"].format(id))
         return None
 
 
@@ -68,17 +68,17 @@ class AsyncBaseResourceManager(ABC):
         )
 
     async def list(self) -> Awaitable[List[BaseResource]]:
-        res = await self.client.get(self.paths["list"])
+        res = await self.client.request("GET", self.paths["list"])
         return self.resource(res.json())
 
     async def retrieve(self, id) -> Awaitable[BaseResource]:
-        res = await self.client.get(self.paths["retrieve"].format(id))
+        res = await self.client.request("GET", self.paths["retrieve"].format(id))
         return self.resource(res.json())
 
     async def update(self, id) -> Awaitable[BaseResource]:
-        res = await self.client.patch(self.paths["update"].format(id))
+        res = await self.client.request("PATCH", self.paths["update"].format(id))
         return self.resource(res.json())
 
     async def delete(self, id) -> None:
-        _ = await self.client.delete(self.paths["delete"].format(id))
+        _ = await self.client.request("DELETE", self.paths["delete"].format(id))
         return None

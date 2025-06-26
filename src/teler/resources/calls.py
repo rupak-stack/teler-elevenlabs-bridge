@@ -3,7 +3,7 @@ from typing import Any, Awaitable, Dict
 from uuid import UUID
 
 from ..clients import BaseClient
-from .base import BaseResource, BaseResourceManager, AsyncBaseResourceManager
+from .base import AsyncBaseResourceManager, BaseResource, BaseResourceManager
 
 PATHS: Dict[str, str] = {
     "create": "/calls",
@@ -42,7 +42,7 @@ class CallResourceManager(BaseResourceManager):
             "status_callback_url": status_callback_url,
             "record": record,
         }
-        res = self.client.post("/calls/create", data=data)
+        res = self.client.request("POST", "/calls/create", data=data)
         return self.resource(res.json())
 
 
@@ -66,5 +66,5 @@ class AsyncCallResourceManager(AsyncBaseResourceManager):
             "status_callback_url": status_callback_url,
             "record": record,
         }
-        res = await self.client.post("/calls/create", data=data)
+        res = await self.client.request("POST", "/calls/create", data=data)
         return self.resource(res.json())
