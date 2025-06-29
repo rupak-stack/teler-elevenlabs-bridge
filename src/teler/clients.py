@@ -3,8 +3,6 @@ import platform
 from importlib import metadata
 from typing import Awaitable, Dict, Optional, Union
 
-import constants
-import exceptions
 import httpx
 
 from teler.resources.calls import (
@@ -12,6 +10,8 @@ from teler.resources.calls import (
     BaseResourceManager,
     CallResourceManager,
 )
+
+from . import constants, exceptions
 
 try:
     __version__ = metadata.version("teler")

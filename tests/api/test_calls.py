@@ -1,7 +1,8 @@
-import pytest
-from teler import Client, AsyncClient
-import respx
 import httpx
+import pytest
+import respx
+
+from teler import AsyncClient, Client
 from teler.resources.calls import CallResource
 
 
@@ -10,7 +11,7 @@ def test_call_create_hits_route_and_returns_call_resource():
     client = Client(api_key="")
     data = {
         "from_number": "+123456789",
-        "to_number": "+987654321",
+        "to_number": "+123456789",
         "flow_url": "https://api.frejun.ai/flow",
         "status_callback_url": "https://api.frejun.ai/status",
         "record": True,

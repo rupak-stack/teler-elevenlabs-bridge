@@ -24,22 +24,70 @@ License: MIT License
         LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
         OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
         SOFTWARE.
+Project-URL: Homepage, https://github.com/frejun-tech/teler-py
+Keywords: frejun,teler,sdk,voip,streaming
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: websockets>=10.0
+Requires-Dist: httpx>=0.20.0
+Requires-Dist: respx>=0.18.0
+Provides-Extra: test
+Requires-Dist: pytest>=7.0.0; extra == "test"
+Requires-Dist: pytest-asyncio>=0.23; extra == "test"
 Dynamic: license-file
 
 # Teler 
 
 This library offers a lightweight and developer-friendly abstraction over the FreJun Teler API.
 
+## Basic Usage
+
+The library provides two built-in client interfaces for creating and managing Teler's REST resources.
+
+### Client (Synchronous)
+
+```python
+from teler import Client
+
+TELER_API_KEY = 'YOUR_API_KEY'
+client = Client(TELER_API_KEY)
+
+call = client.calls.create(
+    from_number="+123*******",
+    to_number="+456*******",
+    flow_url="https://YOUR_DOMAIN.com/flow",
+    status_callback_url="https://YOUR_DOMAIN.com/status",
+    record=True,
+)
+```
+
+### AsyncClient (Asynchronous)
+
+```python
+from teler import AsyncClient
+
+TELER_API_KEY = 'YOUR_API_KEY'
+client = AsyncClient(TELER_API_KEY)
+
+async def initiate_call()
+    call = await client.calls.create(
+        from_number="+123*******",
+        to_number="+456*******",
+        flow_url="https://YOUR_DOMAIN.com/flow",
+        status_callback_url="https://YOUR_DOMAIN.com/status",
+        record=True,
+    )
+
+asyncio.run(initiate_call())
+```
+
 ## Media Streaming
 
-With the launch of the first minor version, the library introduces an intuitive interface for integrating real-time call audio streams from Teler into your application, unlocking advanced capabilities such as Conversational AI, Real-time transcription, and Actionable insights.
+The library provides an intuitive interface for integrating real-time call audio streams from Teler into your application, unlocking advanced capabilities such as Conversational AI, Real-time transcription, and Actionable insights.
 
 ### `StreamConnector`
 
-This class lets you bridge the call audio stream to an endpoint of your choice. It handles the message relaying between the 2 streams via pluggable handlers, making it highly customizable.
+This class lets you bridge the call audio stream to your desired websocket endpoint. It handles message relaying between the two streams via pluggable handlers, making it highly customizable.
 It also handles graceful shutdown of the media streams in case of any unexpected errors.
 
 It takes the following 4 parameters:
@@ -51,7 +99,7 @@ It takes the following 4 parameters:
 
 ### `StreamHandler`
 
-A `StreamHandler` coroutine receives the incoming messages on the websocket, processes them and returns a tuple of `(str, StreamOp)`. `StreamOp` is an operation flag that decides the subsequent action the `StreamConnector` will take.
+A `StreamHandler` coroutine receives the incoming messages on the websocket, processes them and returns a tuple of `(str, StreamOp)` where `StreamOp` is an operation flag that decides the subsequent action the `StreamConnector` will take.
 
 `StreamOp` can be one of:
 
