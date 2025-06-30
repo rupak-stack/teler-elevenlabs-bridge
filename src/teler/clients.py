@@ -1,54 +1,47 @@
-import logging
-import platform
-from importlib import metadata
-from typing import Awaitable, Dict, Optional, Union
-
 import httpx
+from typing import Optional, Dict
 
+from teler import constants, exceptions
 from teler.resources.calls import (
     AsyncCallResourceManager,
-    BaseResourceManager,
     CallResourceManager,
 )
 
-from . import constants, exceptions
+from importlib import metadata
 
 try:
     __version__ = metadata.version("teler")
 except metadata.PackageNotFoundError:
     __version__ = "0.0.0"
 
-logger = logging.getLogger(__name__)
-
 DEFAULT_REQUEST_HEADERS = {
     "Content-Type": "application/json",
     "Accept": "application/json",
-    "User-Agent": f"teler/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}",
+    "User-Agent": f"teler/{__version__} (python-sdk)",
 }
 
 
-class BaseClient:
-    """Base API Client Interface.
-
-    Provides utility methods for interacting with Teler's REST API.
+class Client:
     """
+    Synchronous HTTP Client for the Teler API.
 
-    def __init__(
-        self,
-        client: httpx.BaseClient,
-        headers: Union[Optional[Dict[str, str]], None] = None,
-        transport: Union[httpx.BaseTransport, None] = None,
-        api_key: str = None,
-        calls: BaseResourceManager = None,
-        **kwargs,
-    ):
+    Usage:
+        with Client(api_key="...") as client:
+            ...
+    """
+    def __init__(self, api_key: str = "", headers: Optional[Dict[str, str]] = None, **kwargs):
+        """
+        Initialize the synchronous Teler API client.
+
+        Args:
+            api_key (str): The API key for authentication.
+            headers (Optional[Dict[str, str]]): Additional headers to include in requests.
+            **kwargs: Additional arguments passed to httpx.Client.
+        """
         if not api_key:
-            raise exceptions.BadParametersException(
-                param="api_key", msg="api_key is a required param"
-            )
+            raise exceptions.BadParametersException("api_key is required")
         self.api_key = api_key
-        self._client = client(
-            transport=transport,
+        self.httpx_client = httpx.Client(
             base_url=constants.TELER_BASE_URL,
             headers={
                 k.lower(): v
@@ -56,32 +49,83 @@ class BaseClient:
             },
             **kwargs,
         )
-        self.calls = calls
-
-
-class Client(BaseClient):
-    """Synchronous API Client."""
-
-    def __init__(self, api_key: str = None):
-        super().__init__(
-            client=httpx.Client,
-            api_key=api_key,
-            calls=CallResourceManager,
-        )
+        self.calls = CallResourceManager(self)
 
     def request(self, *args, **kwargs) -> httpx.Response:
-        return self._client.request(*args, **kwargs)
+        """
+        Make a synchronous HTTP request using the underlying httpx.Client.
+        """
+        return self.httpx_client.request(*args, **kwargs)
+
+    def close(self):
+        """
+        Close the underlying httpx.Client.
+        """
+        self.httpx_client.close()
+
+    def __enter__(self):
+        """
+        Enter the runtime context related to this object.
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Exit the runtime context and close the client.
+        """
+        self.close()
 
 
-class AsyncClient(BaseClient):
-    """Asynchronous API Client."""
+class AsyncClient:
+    """
+    Asynchronous HTTP Client for the Teler API.
 
-    def __init__(self, api_key: str = None):
-        super().__init__(
-            client=httpx.AsyncClient,
-            api_key=api_key,
-            calls=AsyncCallResourceManager,
+    Usage:
+        async with AsyncClient(api_key="...") as client:
+            ...
+    """
+    def __init__(self, api_key: str = "", headers: Optional[Dict[str, str]] = None, **kwargs):
+        """
+        Initialize the asynchronous Teler API client.
+
+        Args:
+            api_key (str): The API key for authentication.
+            headers (Optional[Dict[str, str]]): Additional headers to include in requests.
+            **kwargs: Additional arguments passed to httpx.AsyncClient.
+        """
+        if not api_key:
+            raise exceptions.BadParametersException("api_key is required")
+        self.api_key = api_key
+        self.httpx_client = httpx.AsyncClient(
+            base_url=constants.TELER_BASE_URL,
+            headers={
+                k.lower(): v
+                for k, v in {**(headers or {}), **(DEFAULT_REQUEST_HEADERS)}.items()
+            },
+            **kwargs,
         )
+        self.calls = AsyncCallResourceManager(self)
 
-    async def request(self, *args, **kwargs) -> Awaitable[httpx.Response]:
-        return await self._client.request(*args, **kwargs)
+    async def request(self, *args, **kwargs) -> httpx.Response:
+        """
+        Make an asynchronous HTTP request using the underlying httpx.AsyncClient.
+        """
+        return await self.httpx_client.request(*args, **kwargs)
+
+    async def aclose(self):
+        """
+        Close the underlying httpx.AsyncClient.
+        """
+        await self.httpx_client.aclose()
+
+    async def __aenter__(self):
+        """
+        Enter the async runtime context related to this object.
+        """
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """
+        Exit the async runtime context and close the client.
+        """
+        await self.aclose()

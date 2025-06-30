@@ -43,7 +43,7 @@ class StreamConnector:
         remote_stream_handler: StreamHandler = _default_stream_handler,
     ):
         if stream_type == StreamType.UNIDIRECTIONAL:
-            raise exceptions.NotImplementedException(
+            raise exceptions.NotImplemented(
                 msg="Unidirectional streams are not supported yet."
             )
         if not remote_url:

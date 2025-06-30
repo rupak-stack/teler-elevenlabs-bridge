@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-from typing import Any, Dict, cast
+from typing import Any, Awaitable, Dict
 from uuid import UUID
 
-from teler.resources.base import AsyncBaseResourceManager, BaseResource, BaseResourceManager
+from ..clients import BaseClient
+from .base import AsyncBaseResourceManager, BaseResource, BaseResourceManager
 
 PATHS: Dict[str, str] = {
     "create": "/calls",
@@ -12,18 +13,18 @@ PATHS: Dict[str, str] = {
     "delete": "/calls/{}",
 }
 
+
 @dataclass
 class CallResource(BaseResource):
-    """Represents a call resource returned by the Teler API."""
-    id: int
     uuid: UUID
 
     def __init__(self, data: Dict[str, Any]):
         super().__init__(data)
 
+
 class CallResourceManager(BaseResourceManager):
-    """Synchronous manager for call resources."""
-    def __init__(self, client: Any):
+
+    def __init__(self, client: BaseClient):
         super().__init__(client, CallResource, PATHS)
 
     def create(
@@ -34,9 +35,6 @@ class CallResourceManager(BaseResourceManager):
         status_callback_url: str,
         record: bool = True,
     ) -> CallResource:
-        """
-        Create a new call resource.
-        """
         data = {
             "from_number": from_number,
             "to_number": to_number,
@@ -45,11 +43,12 @@ class CallResourceManager(BaseResourceManager):
             "record": record,
         }
         res = self.client.request("POST", "/calls/create", data=data)
-        return cast(CallResource, self.resource(res.json()))
+        return self.resource(res.json())
+
 
 class AsyncCallResourceManager(AsyncBaseResourceManager):
-    """Asynchronous manager for call resources."""
-    def __init__(self, client: Any):
+
+    def __init__(self, client: BaseClient):
         super().__init__(client, CallResource, PATHS)
 
     async def create(
@@ -59,10 +58,7 @@ class AsyncCallResourceManager(AsyncBaseResourceManager):
         flow_url: str,
         status_callback_url: str,
         record: bool = True,
-    ) -> CallResource:
-        """
-        Asynchronously create a new call resource.
-        """
+    ) -> Awaitable[CallResource]:
         data = {
             "from_number": from_number,
             "to_number": to_number,
@@ -71,4 +67,4 @@ class AsyncCallResourceManager(AsyncBaseResourceManager):
             "record": record,
         }
         res = await self.client.request("POST", "/calls/create", data=data)
-        return cast(CallResource, self.resource(res.json()))
+        return self.resource(res.json())

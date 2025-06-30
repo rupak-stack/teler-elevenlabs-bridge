@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
-from typing import Any, Dict, List, Type
+from typing import Any, Awaitable, Dict, List
 
-from .. import exceptions
+import exceptions
+
+from ..clients import BaseClient
 
 
 @dataclass
 class BaseResource(ABC):
-    """Base class for all resource objects."""
 
     def __init__(self, data: Dict[str, Any]):
         # Match only declared fields; raise on extra keys
@@ -20,10 +21,9 @@ class BaseResource(ABC):
 
 
 class BaseResourceManager(ABC):
-    """Base class for all resource managers."""
 
     def __init__(
-        self, client: Any, resource: Type[BaseResource], paths: Dict[str, str]
+        self, client: BaseClient, resource: BaseResource, paths: Dict[str, str]
     ):
         self.client = client
         self.resource = resource
@@ -37,7 +37,7 @@ class BaseResourceManager(ABC):
 
     def list(self) -> List[BaseResource]:
         res = self.client.request("GET", "/calls")
-        return [self.resource(item) for item in res.json()]
+        return self.resource(res.json())
 
     def retrieve(self, id) -> BaseResource:
         res = self.client.request("GET", self.paths["retrieve"].format(id))
@@ -53,10 +53,9 @@ class BaseResourceManager(ABC):
 
 
 class AsyncBaseResourceManager(ABC):
-    """Base class for all async resource managers."""
 
     def __init__(
-        self, client: Any, resource: type[BaseResource], paths: Dict[str, str]
+        self, client: BaseClient, resource: BaseResource, paths: Dict[str, str]
     ):
         self.client = client
         self.resource = resource
@@ -68,15 +67,15 @@ class AsyncBaseResourceManager(ABC):
             msg="Method 'create()' is not implemented."
         )
 
-    async def list(self) -> List[BaseResource]:
+    async def list(self) -> Awaitable[List[BaseResource]]:
         res = await self.client.request("GET", self.paths["list"])
-        return [self.resource(item) for item in res.json()]
+        return self.resource(res.json())
 
-    async def retrieve(self, id) -> BaseResource:
+    async def retrieve(self, id) -> Awaitable[BaseResource]:
         res = await self.client.request("GET", self.paths["retrieve"].format(id))
         return self.resource(res.json())
 
-    async def update(self, id) -> BaseResource:
+    async def update(self, id) -> Awaitable[BaseResource]:
         res = await self.client.request("PATCH", self.paths["update"].format(id))
         return self.resource(res.json())
 
