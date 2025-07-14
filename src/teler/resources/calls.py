@@ -1,11 +1,10 @@
 from dataclasses import dataclass
-from typing import Any, Dict, cast
-from uuid import UUID
+from typing import Any, Dict, Optional, cast
 
 from teler.resources.base import AsyncBaseResourceManager, BaseResource, BaseResourceManager
 
 PATHS: Dict[str, str] = {
-    "create": "/calls",
+    "create": "/calls/initiate",
     "list": "/calls",
     "retrieve": "/calls/{}",
     "update": "/calls/{}",
@@ -15,11 +14,18 @@ PATHS: Dict[str, str] = {
 @dataclass
 class CallResource(BaseResource):
     """Represents a call resource returned by the Teler API."""
-    id: int
-    uuid: UUID
+    uuid: str
+    from_number: Optional[str]
+    to_number: Optional[str]
+    status: Optional[str]
+    status_callback_url: Optional[str]
+    record: Optional[bool]
+    created_at: Optional[str]
+    updated_at: Optional[str]
 
     def __init__(self, data: Dict[str, Any]):
         super().__init__(data)
+
 
 class CallResourceManager(BaseResourceManager):
     """Synchronous manager for call resources."""
@@ -44,8 +50,9 @@ class CallResourceManager(BaseResourceManager):
             "status_callback_url": status_callback_url,
             "record": record,
         }
-        res = self.client.request("POST", "/calls/create", data=data)
+        res = self.client.request("POST", self.paths["create"], data=data)
         return cast(CallResource, self.resource(res.json()))
+
 
 class AsyncCallResourceManager(AsyncBaseResourceManager):
     """Asynchronous manager for call resources."""
@@ -70,5 +77,5 @@ class AsyncCallResourceManager(AsyncBaseResourceManager):
             "status_callback_url": status_callback_url,
             "record": record,
         }
-        res = await self.client.request("POST", "/calls/create", data=data)
+        res = await self.client.request("POST", self.paths["create"], data=data)
         return cast(CallResource, self.resource(res.json()))

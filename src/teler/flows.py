@@ -10,6 +10,9 @@ class CallFlow:
         status_callback_url: str = "",
         record: bool = True,
     ) -> Dict[str, Any]:
+        """
+        Build and return dial action flow.
+        """
         return {
             "action": "dial",
             "from_numebr": from_number,
@@ -22,6 +25,9 @@ class CallFlow:
     def stream(
         ws_url: str, chunk_size: int = 400, record: bool = True
     ) -> Dict[str, Any]:
+        """
+        Build and return stream action flow.
+        """
         return {
             "action": "stream",
             "ws_url": ws_url,
@@ -31,4 +37,7 @@ class CallFlow:
 
     @staticmethod
     def play(file_url: str) -> Dict[str, Any]:
+        """
+        Build and return play action flow.
+        """
         return {"action": "play", "file_url": file_url}
