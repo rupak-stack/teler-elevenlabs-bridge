@@ -55,6 +55,10 @@ class Client:
         """
         Make a synchronous HTTP request using the underlying httpx.Client.
         """
+        if kwargs.get('method') in ["POST", "PUT", "PATCH"]:
+            headers = kwargs.get('headers', {})
+            headers['Content-Type'] = "application/json"
+            kwargs['headers'] = headers
         return self.httpx_client.request(*args, **kwargs)
 
     def close(self):
@@ -110,6 +114,10 @@ class AsyncClient:
         """
         Make an asynchronous HTTP request using the underlying httpx.AsyncClient.
         """
+        if kwargs.get('method') in ["POST", "PUT", "PATCH"]:
+            headers = kwargs.get('headers', {})
+            headers['Content-Type'] = "application/json"
+            kwargs['headers'] = headers
         return await self.httpx_client.request(*args, **kwargs)
 
     async def aclose(self):
