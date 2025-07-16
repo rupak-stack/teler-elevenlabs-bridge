@@ -46,8 +46,9 @@ class Client:
             **DEFAULT_REQUEST_HEADERS,
             "X-Api-Key": self.api_key,
         }
+        base_url = kwargs.pop("base_url", constants.TELER_BASE_URL)
         self.httpx_client = httpx.Client(
-            base_url=constants.TELER_BASE_URL,
+            base_url=base_url,
             headers={
                 k.lower(): v
                 for k, v in merged_headers.items()
@@ -106,8 +107,9 @@ class AsyncClient:
             **DEFAULT_REQUEST_HEADERS,
             "X-Api-Key": self.api_key,
         }
+        base_url = kwargs.pop("base_url", constants.TELER_BASE_URL)
         self.httpx_client = httpx.AsyncClient(
-            base_url=constants.TELER_BASE_URL,
+            base_url=base_url,
             headers={
                 k.lower(): v
                 for k, v in merged_headers.items()
