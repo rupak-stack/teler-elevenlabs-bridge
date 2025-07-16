@@ -16,7 +16,7 @@ PATHS: Dict[str, str] = {
 @dataclass
 class CallResource(BaseResource):
     """Represents a call resource returned by the Teler API."""
-    uuid: str
+    id: str
     from_number: Optional[str]
     to_number: Optional[str]
     status: Optional[str]
@@ -53,7 +53,7 @@ class CallResourceManager(BaseResourceManager):
             "record": record,
         }
         res = self.client.request("POST", self.paths["create"], data=json.dumps(data))
-        return cast(CallResource, self.resource(res.json()))
+        return cast(CallResource, self.resource(res.json()['data']))
 
 
 class AsyncCallResourceManager(AsyncBaseResourceManager):
@@ -80,4 +80,4 @@ class AsyncCallResourceManager(AsyncBaseResourceManager):
             "record": record,
         }
         res = await self.client.request("POST", self.paths["create"], data=json.dumps(data))
-        return cast(CallResource, self.resource(res.json()))
+        return cast(CallResource, self.resource(res.json()['data']))
