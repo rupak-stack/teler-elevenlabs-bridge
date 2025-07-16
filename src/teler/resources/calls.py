@@ -1,7 +1,9 @@
+import json
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, cast
 
-from teler.resources.base import AsyncBaseResourceManager, BaseResource, BaseResourceManager
+from teler.resources.base import (AsyncBaseResourceManager, BaseResource,
+                                  BaseResourceManager)
 
 PATHS: Dict[str, str] = {
     "create": "/calls/initiate",
@@ -50,7 +52,7 @@ class CallResourceManager(BaseResourceManager):
             "status_callback_url": status_callback_url,
             "record": record,
         }
-        res = self.client.request("POST", self.paths["create"], data=data)
+        res = self.client.request("POST", self.paths["create"], data=json.dumps(data))
         return cast(CallResource, self.resource(res.json()))
 
 
@@ -77,5 +79,5 @@ class AsyncCallResourceManager(AsyncBaseResourceManager):
             "status_callback_url": status_callback_url,
             "record": record,
         }
-        res = await self.client.request("POST", self.paths["create"], data=data)
+        res = await self.client.request("POST", self.paths["create"], data=json.dumps(data))
         return cast(CallResource, self.resource(res.json()))
