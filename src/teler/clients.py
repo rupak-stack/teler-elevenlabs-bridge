@@ -41,11 +41,16 @@ class Client:
         if not api_key:
             raise exceptions.BadParametersException("api_key is required")
         self.api_key = api_key
+        merged_headers = {
+            **(headers or {}),
+            **DEFAULT_REQUEST_HEADERS,
+            "X-Api-Key": self.api_key,
+        }
         self.httpx_client = httpx.Client(
             base_url=constants.TELER_BASE_URL,
             headers={
                 k.lower(): v
-                for k, v in {**(headers or {}), **(DEFAULT_REQUEST_HEADERS)}.items()
+                for k, v in merged_headers.items()
             },
             **kwargs,
         )
@@ -96,11 +101,16 @@ class AsyncClient:
         if not api_key:
             raise exceptions.BadParametersException("api_key is required")
         self.api_key = api_key
+        merged_headers = {
+            **(headers or {}),
+            **DEFAULT_REQUEST_HEADERS,
+            "X-Api-Key": self.api_key,
+        }
         self.httpx_client = httpx.AsyncClient(
             base_url=constants.TELER_BASE_URL,
             headers={
                 k.lower(): v
-                for k, v in {**(headers or {}), **(DEFAULT_REQUEST_HEADERS)}.items()
+                for k, v in merged_headers.items()
             },
             **kwargs,
         )
