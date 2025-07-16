@@ -6,11 +6,7 @@ from teler.resources.base import (AsyncBaseResourceManager, BaseResource,
                                   BaseResourceManager)
 
 PATHS: Dict[str, str] = {
-    "create": "/calls/initiate",
-    "list": "/calls",
-    "retrieve": "/calls/{}",
-    "update": "/calls/{}",
-    "delete": "/calls/{}",
+    "create": "/calls/initiate"
 }
 
 @dataclass

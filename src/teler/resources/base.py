@@ -36,18 +36,34 @@ class BaseResourceManager(ABC):
         )
 
     def list(self) -> List[BaseResource]:
-        res = self.client.request("GET", "/calls")
+        if self.paths.get("list", None) is None:
+            raise exceptions.NotImplementedException(
+                msg="Method 'list()' is not implemented."
+            )
+        res = self.client.request("GET", self.paths["list"])
         return [self.resource(item) for item in res.json()]
 
     def retrieve(self, id) -> BaseResource:
+        if self.paths.get("retrieve", None) is None:
+            raise exceptions.NotImplementedException(
+                msg="Method 'retrieve()' is not implemented."
+            )
         res = self.client.request("GET", self.paths["retrieve"].format(id))
         return self.resource(res.json())
 
     def update(self, id) -> BaseResource:
+        if self.paths.get("update", None) is None:
+            raise exceptions.NotImplementedException(
+                msg="Method 'update()' is not implemented."
+            )
         res = self.client.request("PATCH", self.paths["update"].format(id))
         return self.resource(res.json())
 
     def delete(self, id) -> None:
+        if self.paths.get("delete", None) is None:
+            raise exceptions.NotImplementedException(
+                msg="Method 'delete()' is not implemented."
+            )
         _ = self.client.request("DELETE", self.paths["delete"].format(id))
         return None
 
@@ -69,17 +85,33 @@ class AsyncBaseResourceManager(ABC):
         )
 
     async def list(self) -> List[BaseResource]:
+        if self.paths.get("list", None) is None:
+            raise exceptions.NotImplementedException(
+                msg="Method 'list()' is not implemented."
+            )
         res = await self.client.request("GET", self.paths["list"])
         return [self.resource(item) for item in res.json()]
 
     async def retrieve(self, id) -> BaseResource:
+        if self.paths.get("retrieve", None) is None:
+            raise exceptions.NotImplementedException(
+                msg="Method 'retrieve()' is not implemented."
+            )
         res = await self.client.request("GET", self.paths["retrieve"].format(id))
         return self.resource(res.json())
 
     async def update(self, id) -> BaseResource:
-        res = await self.client.request("PATCH", self.paths["update"].format(id))
+        if self.paths.get("update", None) is None:
+            raise exceptions.NotImplementedException(
+                msg="Method 'update()' is not implemented."
+            )
+        res = self.client.request("PATCH", self.paths["update"].format(id))
         return self.resource(res.json())
 
     async def delete(self, id) -> None:
+        if self.paths.get("delete", None) is None:
+            raise exceptions.NotImplementedException(
+                msg="Method 'delete()' is not implemented."
+            )
         _ = await self.client.request("DELETE", self.paths["delete"].format(id))
         return None

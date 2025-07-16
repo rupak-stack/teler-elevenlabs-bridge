@@ -1,13 +1,10 @@
+from importlib import metadata
+from typing import Dict, Optional
+
 import httpx
-from typing import Optional, Dict
 
 from teler import constants, exceptions
-from teler.resources.calls import (
-    AsyncCallResourceManager,
-    CallResourceManager,
-)
-
-from importlib import metadata
+from teler.resources.calls import AsyncCallResourceManager, CallResourceManager
 
 try:
     __version__ = metadata.version("teler")
@@ -61,7 +58,10 @@ class Client:
         """
         Make a synchronous HTTP request using the underlying httpx.Client.
         """
-        return self.httpx_client.request(*args, **kwargs)
+        res = self.httpx_client.request(*args, **kwargs)
+        if res.status_code == 403:
+            raise exceptions.ForbiddenException()
+        return res
 
     def close(self):
         """
@@ -122,7 +122,10 @@ class AsyncClient:
         """
         Make an asynchronous HTTP request using the underlying httpx.AsyncClient.
         """
-        return await self.httpx_client.request(*args, **kwargs)
+        res = await self.httpx_client.request(*args, **kwargs)
+        if res.status_code == 403:
+            raise exceptions.ForbiddenException()
+        return res
 
     async def aclose(self):
         """
