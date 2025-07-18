@@ -84,9 +84,7 @@ from pydantic import BaseModel, HttpUrl
 from typing import Annotated
 
 from teler.streams import StreamConnector, StreamOp, StreamType
-from teler import AsyncClient
-
-from teler.flows import CallFlow
+from teler import AsyncClient, CallFlow
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
