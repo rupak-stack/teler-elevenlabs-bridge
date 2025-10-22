@@ -8,7 +8,7 @@ class CallFlow:
         from_number: str,
         to_number: str,
         status_callback_url: str = "",
-        record: bool = True,
+        record: bool = True
     ) -> Dict[str, Any]:
         """
         Build and return dial action flow.
@@ -18,12 +18,12 @@ class CallFlow:
             "from_numebr": from_number,
             "to_number": to_number,
             "status_callback_url": status_callback_url,
-            "record": record,
+            "record": record
         }
 
     @staticmethod
     def stream(
-        ws_url: str, chunk_size: int = 400, record: bool = True
+        ws_url: str, sample_rate: str, chunk_size: int = 400, record: bool = True
     ) -> Dict[str, Any]:
         """
         Build and return stream action flow.
@@ -33,6 +33,7 @@ class CallFlow:
             "ws_url": ws_url,
             "chunk_size": chunk_size,
             "record": record,
+            "sample_rate": sample_rate
         }
 
     @staticmethod
